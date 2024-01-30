@@ -16,11 +16,6 @@ class Shield : Module() {
 
     private var bowStack: ItemStack? = null
 
-    override fun onEnable() {
-        LiquidBounce.moduleManager[Shield2::class.java].state = false
-        LiquidBounce.moduleManager[Shield3::class.java].state = false
-    }
-
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val player = Minecraft.getMinecraft().player
