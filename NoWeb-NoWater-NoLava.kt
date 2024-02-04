@@ -11,12 +11,11 @@ import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.minecraft.block.BlockLiquid
 import net.minecraft.block.BlockWeb
-import net.minecraft.block.material.Material
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.client.CPacketPlayerDigging
 import net.minecraft.util.EnumFacing
 
-@ModuleInfo(name = "NoWeb-NoWater-NoLava", description = "noWeb,water,lava slow", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "NoWeb-NoLiquid", description = "bypass,NoLava by Pursue(193923709)", category = ModuleCategory.MOVEMENT)
 class NoWeb : Module() {
 
     @EventTarget
@@ -24,9 +23,8 @@ class NoWeb : Module() {
 
         val theWorld = mc.theWorld
         val searchBlocks = BlockUtils.searchBlocks(4)
-        val search2Blocks = BlockUtils.searchBlocks(2)
 
-        for (block in search2Blocks){
+        for (block in searchBlocks){
             val blockpos = block.key.unwrap()
             val blocks = block.value.unwrap()
             if(blocks is BlockWeb){
@@ -37,22 +35,6 @@ class NoWeb : Module() {
                 mc2.connection!!.sendPacket(CPacketPlayerDigging(CPacketPlayerDigging.Action.STOP_DESTROY_BLOCK,blockpos, EnumFacing.DOWN))
                 mc2.player.inWater = false
             }
-            if (blocks == Blocks.LAVA) {
-                mc2.connection!!.sendPacket(CPacketPlayerDigging(CPacketPlayerDigging.Action.STOP_DESTROY_BLOCK,blockpos, EnumFacing.DOWN))
-                (theWorld as WorldClientImpl).wrapped.setBlockToAir(blockpos)
-            }
-        }
-        for (block in searchBlocks){
-            val blockpos = block.key.unwrap()
-            val blocks = block.value.unwrap()
-            if (blocks is BlockLiquid){
-                mc2.connection!!.sendPacket(CPacketPlayerDigging(CPacketPlayerDigging.Action.STOP_DESTROY_BLOCK,blockpos, EnumFacing.DOWN))
-                mc2.player.inWater = false
-            }
-        }
-        for (block in searchBlocks){
-            val blockpos = block.key.unwrap()
-            val blocks = block.value.unwrap()
             if (blocks == Blocks.LAVA) {
                 mc2.connection!!.sendPacket(CPacketPlayerDigging(CPacketPlayerDigging.Action.STOP_DESTROY_BLOCK,blockpos, EnumFacing.DOWN))
                 (theWorld as WorldClientImpl).wrapped.setBlockToAir(blockpos)
