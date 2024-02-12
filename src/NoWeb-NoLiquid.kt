@@ -1,6 +1,6 @@
 /*
  * 提供给那些没有无水、无岩浆、无蜘蛛网的公益或内部
- * 我不知道NoWeb和NoLiquid作者是谁，我只是在他基础上加了个noLava
+ * NoWeb和NoLiquid作者为starontop，NoLava为我在这个基础上添加的
  * 开源地址：https://github.com/FKtzs/Nattalie
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
@@ -27,8 +27,9 @@ class NoWeb : Module() {
     fun onUpdate(event: UpdateEvent) {
 
         val theWorld = mc.theWorld
-        val searchBlocks = BlockUtils.searchBlocks(4)
-
+        val searchBlocks = BlockUtils.searchBlocks(6)
+        val searchBlocks2 = BlockUtils.searchBlocks(3)
+        
         for (block in searchBlocks){
             val blockpos = block.key.unwrap()
             val blocks = block.value.unwrap()
@@ -50,8 +51,17 @@ class NoWeb : Module() {
                 (theWorld as WorldClientImpl).wrapped.setBlockToAir(blockpos)
             }
         }
+        for (block in searchBlocks2) {
+            val blockpos = block.key.unwrap()
+            val blocks = block.value.unwrap()
 
-        if (mc2.player.isOnLadder && mc2.gameSettings.keyBindJump.isKeyDown) {
+            if(blocks is BlockWeb){
+                mc2.connection!!.sendPacket(CPacketPlayerDigging(CPacketPlayerDigging.Action.STOP_DESTROY_BLOCK,blockpos, EnumFacing.DOWN))
+                mc2.player.isInWeb = false
+            }
+        }
+
+        if (mc2.player.isOnLadder && mc2.gameSettings.keyBindJump.isKeyDown) { // 这个为快速上梯子，忘记标注啦
             if (mc2.player.motionY >= 0.0) {
                 mc2.player.motionY = 0.1786
             }
