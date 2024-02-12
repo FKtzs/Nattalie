@@ -23,13 +23,15 @@ import net.minecraft.util.EnumFacing
 @ModuleInfo(name = "NoWeb-NoLiquid", description = "NoWeb,Liquid,Lava", category = ModuleCategory.MOVEMENT)
 class NoWeb : Module() {
 
+    private val noliquid = BoolValue("DisLiquid",false) // 是否将水设置为空气，这个可以让你在hyt的海洋神殿中不会被踢出
+
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
 
         val theWorld = mc.theWorld
         val searchBlocks = BlockUtils.searchBlocks(6)
         val searchBlocks2 = BlockUtils.searchBlocks(3)
-        
+
         for (block in searchBlocks){
             val blockpos = block.key.unwrap()
             val blocks = block.value.unwrap()
@@ -40,6 +42,9 @@ class NoWeb : Module() {
             if(blocks is BlockLiquid){
                 mc2.connection!!.sendPacket(CPacketPlayerDigging(CPacketPlayerDigging.Action.STOP_DESTROY_BLOCK,blockpos, EnumFacing.DOWN))
                 mc2.player.inWater = false
+                if (noliquid.get()) {
+                    (theWorld as WorldClientImpl).wrapped.setBlockToAir(blockpos)
+                }
             }
             /* 别忘了在LiquidBounce_at这个文件里面加上这句：
 
