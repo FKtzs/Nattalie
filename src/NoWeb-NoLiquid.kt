@@ -1,6 +1,6 @@
 /*
  * 提供给那些没有无水、无岩浆、无蜘蛛网的公益或内部
- * NoWeb和NoLiquid作者为starontop，NoLava为我在这个基础上添加的
+ * NoWeb、NoLiquid和快速上梯子作者为starontop，NoLava为我在这个基础上添加的
  * 开源地址：https://github.com/FKtzs/Nattalie
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
