@@ -32,10 +32,10 @@ class AutoBlock : Module() {
     private var dis = false
     private var hit = false
     private var blocking = false
-    val a = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
+        val a = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
         hit = RotationUtils.isFaced(a.target, 0.05)
         if (noPostDis.get()) {
             if (mc2.player != null) {
@@ -86,13 +86,16 @@ class AutoBlock : Module() {
             dis = false
         }
     }
+
     @EventTarget
     fun onPacket(event: PacketEvent) {
+        val a = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
         val packet = event.packet.unwrap()
         if (!dis && (packet is CPacketPlayerTryUseItemOnBlock) && classProvider.isItemSword(mc.thePlayer!!.heldItem!!.item) && blocking && !hit && a.state) {
             event.cancelEvent()
         }
     }
+
     @EventTarget
     fun onMotion(event: MotionEvent) {
         if (!MovementUtils.isMoving) {
