@@ -1,12 +1,14 @@
 /*
- * 提供给那些有postDis但是没有NoSlow的，我这个有走吃和跑防，跑拉弓得花钱找我买，就算思路烂大街
+ * 更好的NoSlow，已开源出跑拉弓，购入跑吃找Pursue
+ * 跑拉弓请保证弓在左边的格子是空气或者方块，不能为剑、食物、药水等
  * by Pursue（193923709）
  * 开源地址：https://github.com/FKtzs/Nattalie
  */
-package net.ccbluex.liquidbounce.features.module.modules.Hyt
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import me.utils.PacketUtils
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
@@ -15,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.injection.backend.unwrap
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.createUseItemPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -26,7 +29,7 @@ import net.minecraft.util.EnumFacing
 import net.minecraft.util.EnumHand
 import net.minecraft.util.math.BlockPos
 
-@ModuleInfo(name = "GrimNoSlow", description = "No items use the slow", category = ModuleCategory.HYT)
+@ModuleInfo(name = "GrimNoSlow", description = "No items use the slow", category = ModuleCategory.MOVEMENT)
 class GrimNoSlow : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Post", "Vanilla"), "Post")
@@ -36,53 +39,43 @@ class GrimNoSlow : Module() {
 
     private val usw = BoolValue("walkEat", false) // 走吃
 
-    private var slow = false
-
-    @EventTarget
-    fun onPacket(event: PacketEvent) {
-        val packet = event.packet.unwrap()
-
-        if (packet is CPacketPlayerTryUseItem) {
-
-            val pk = mc.thePlayer?.unwrap()?.getHeldItem(packet.hand)?.item ?: return
-
-            if (pk is ItemSword || pk is ItemShield) {
-                slow = true
-            }
-            if (pk is ItemFood || pk is ItemPotion || pk is ItemBucketMilk) {
-                slow = false
-            }
-        }
-    }
+    // 跑拉弓请保证弓在左边的格子是空气或者方块，不能为剑、食物、药水等
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
         if (!(mc.gameSettings.keyBindUseItem.isKeyDown)) {
             return
         }
-        if (slow) {
-            when(modeValue.get().toLowerCase()) {
-                "post" -> {
+
+        val curSlot = mc.thePlayer!!.inventory.currentItem
+        val spoof = if (curSlot == 0) 1 else -1
+
+        when(modeValue.get().toLowerCase()) {
+            "vanilla" -> {
+                mc.thePlayer!!.motionX=mc.thePlayer!!.motionX
+                mc.thePlayer!!.motionY=mc.thePlayer!!.motionY
+                mc.thePlayer!!.motionZ= mc.thePlayer!!.motionZ
+            }
+            "post" -> {
+                if (classProvider.isItemSword(mc.thePlayer!!.heldItem?.item)) {
                     if (event.eventState == EventState.PRE) {
-                        mc2.connection!!.sendPacket(
-                            CPacketPlayerDigging(
-                                CPacketPlayerDigging.Action.RELEASE_USE_ITEM,
-                                BlockPos(0, 0, 0),
-                                EnumFacing.DOWN
-                            )
-                        )
+                        mc2.connection!!.sendPacket(CPacketPlayerDigging(CPacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN))
                     }
                     if (event.eventState == EventState.POST) {
                         PacketUtils.sendPacketC0F()
-                        // 发C0F，如果你的PacketUtils里面没这个，就换成mc2.connection!!.sendPacket(CPacketConfirmTransaction())
                         mc2.connection!!.sendPacket(CPacketPlayerTryUseItem(EnumHand.MAIN_HAND))
                         mc2.connection!!.sendPacket(CPacketPlayerTryUseItem(EnumHand.OFF_HAND))
                     }
                 }
-                "vanilla" -> {
-                    mc.thePlayer!!.motionX=mc.thePlayer!!.motionX
-                    mc.thePlayer!!.motionY=mc.thePlayer!!.motionY
-                    mc.thePlayer!!.motionZ= mc.thePlayer!!.motionZ
+                if (classProvider.isItemBow(mc.thePlayer!!.heldItem?.item)) {
+                    if (event.eventState == EventState.PRE) {
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(curSlot + spoof))
+                        mc2.connection!!.sendPacket(CPacketPlayerTryUseItem(EnumHand.OFF_HAND))
+                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(curSlot))
+                    }
+                    if (event.eventState == EventState.POST) {
+                        mc2.connection!!.sendPacket(CPacketPlayerTryUseItem(EnumHand.MAIN_HAND))
+                    }
                 }
             }
         }
